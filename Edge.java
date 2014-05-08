@@ -13,6 +13,6 @@ public class Edge implements Comparable <Edge>{
 	public ClientNode getNode(){return node;}
 	@Override
 	public int compareTo(Edge arg0) {
-		return getUpload() - arg0.getUpload();
+		return arg0.getUpload() - getUpload();
 	}
 }

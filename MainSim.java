@@ -9,7 +9,17 @@ public class MainSim {
 	 * @param args
 	 */
 	final static boolean debug = false;
-	final static int size = 1000;
+	final static int size = 3000;
+	final static int runTime = 2000;
+	final static int exchangeRandom = 30;
+	final static int exchangeBase = 20;
+	final static double addRatio = .2;
+	final static double freeLoadRatio = .25;
+	final static double straightRemoveRatio = .1;
+	final static double fullRemoveRatio = .8;
+	final static double semiRemoveRatio = .1;
+	final static int startingNodes = 25;
+	static int nodeCount = 0;
 	static List<List<Edge>> edges;
 	static List<ClientNode> nodes;
 	public static void main(String[] args) {
@@ -17,10 +27,11 @@ public class MainSim {
 		//Add a source node
 		nodes = new ArrayList<ClientNode>();
 		edges = new ArrayList<List<Edge>>();
-		nodes.add(new ClientNode(0, size, 0, true, false));
+		nodes.add(new ClientNode(nodeCount, size, 0, true, false));
 		//Add empty nodes
-		for(int i = 1; i < 10; i++){
-			nodes.add(new ClientNode(i, size, 0, false, false));
+		for(int i = 1; i < startingNodes; i++){
+			nodeCount++;
+			nodes.add(new ClientNode(nodeCount, size, 0, false, false));
 		}
 		for(int i = 0; i < nodes.size(); i++){
 			edges.add(new ArrayList<Edge>());
@@ -39,7 +50,10 @@ public class MainSim {
 				e.printStackTrace();
 			}*/
 			printDone(i);
-			addNodes(i, nodes.size());
+			if(i > runTime){
+				addNodes(i);
+			}
+			removeNodes();
 			i++;
 		}
 	}
@@ -64,13 +78,17 @@ public class MainSim {
 			infoDump();
 		}
 	}
-	private static void addNodes(int time, int nodeCount){
-		if(Math.random() < .3){
+	private static void addNodes(int time){
+		if(Math.random() < addRatio){
 			ClientNode temp; 
-			if(Math.random() < .3){
+			nodeCount++;
+			System.out.print("Adding Node: " + nodeCount);
+			if(Math.random() < freeLoadRatio){
 				temp = new ClientNode(nodeCount, size, time, false, true);
+				System.out.println("(Freeloader)");
 			}else{
 				temp = new ClientNode(nodeCount, size, time, false, false);
+				System.out.println();
 			}
 			nodes.add(temp);
 			for(List<Edge> tempEdge: edges){
@@ -84,16 +102,17 @@ public class MainSim {
 		}
 	}
 	private static void removeNodes(){
-		if(Math.random() < .2){
+		if(Math.random() < straightRemoveRatio){
 			int index = (int)(Math.random() * nodes.size());
 			ClientNode temp = nodes.get(index);
 			if(temp.getID() != 0){
-				if(temp.marked() && Math.random() < .3 || Math.random() < .1){
+				if(temp.marked() && Math.random() < fullRemoveRatio || Math.random() < semiRemoveRatio){
 					//remove nodes
 					edges.remove(index);
 					for(List<Edge> tempList : edges){
 						tempList.remove(index);
 					}
+					System.out.println("Removing Node: " + nodes.get(index).getID());
 					nodes.remove(index);
 				}
 			}
@@ -133,7 +152,7 @@ public class MainSim {
 			}else{
 				for(int j = 0; j < edges.size(); j++){
 					assert(edges.get(j).get(i).getNode().equals(nodes.get(i)));
-					edges.get(j).get(i).setUpload((int)(Math.random() * 100) + 50);
+					edges.get(j).get(i).setUpload((int)(Math.random() * exchangeRandom) + exchangeBase);
 				}
 			}
 		}
