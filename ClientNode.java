@@ -56,6 +56,16 @@ public class ClientNode {
 				top4.add(clients.get(i));
 			}
 		}
+		if(top4.size() < 4 && getFileIndicesAlreadyDLed().size() != 0){
+			int i = 0;
+			while(top4.size() < 4 && i < clients.size() * 2){
+				Edge temp = clients.get((int)(Math.random() * clients.size()));
+				if(!top4.contains(temp) && temp.getNode().donateTo(getFileIndicesAlreadyDLed())){
+					top4.add(temp);
+				}
+				i++;
+			}
+		}
 		if(debug){
 			System.out.println("Top4 completed for: " + nodeValue);
 			debug = false;
@@ -89,11 +99,11 @@ public class ClientNode {
 		if(requested.size() == 0){
 			return false;
 		}
-		//Copy origional edges list, because we are making changes
+		//Copy original edges list, because we are making changes
 		List<Edge> clients = new ArrayList<Edge>(edges);
 		Collections.sort(clients);
 		//Go through this sorted array and see who has the highest bandwidth with things I want 
-		for(int i = clients.size() - 1; i >= 0 && top4.size() < 4; i--){
+		for(int i = clients.size() - 1; i >= 0 && top4.size() < 4 && getFileIndicesNeeded().size() != 0; i--){
 			if(clients.get(i).getNode().haveWhatIwant(getFileIndicesNeeded(), nodeValue)){
 				top4.add(clients.get(i));
 			}
@@ -102,7 +112,7 @@ public class ClientNode {
 		if(top4.size() < 4 && getFileIndicesAlreadyDLed().size() != 0){
 			int i = 0;
 			while(top4.size() < 4 && i < clients.size() * 2){
-				Edge temp = clients.get((int)(Math.random() * top4.size()));
+				Edge temp = clients.get((int)(Math.random() * clients.size()));
 				if(!top4.contains(temp) && temp.getNode().donateTo(getFileIndicesAlreadyDLed())){
 					top4.add(temp);
 				}

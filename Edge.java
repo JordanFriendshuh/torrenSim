@@ -1,5 +1,5 @@
-
-
+//Edge class, holds edge data
+//of download speed, and who is connected
 
 public class Edge implements Comparable <Edge>{
 	private int upload;

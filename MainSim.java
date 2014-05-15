@@ -9,30 +9,43 @@ public class MainSim {
 	 * @param args
 	 */
 	final static boolean debug = false;
-	final static int size = 3000;
-	final static int runTime = 2000;
+	//Paramaters to use for testing
+	final static int size = 1500;
+	final static int runTime = 50;
 	final static int exchangeRandom = 30;
 	final static int exchangeBase = 20;
-	final static double addRatio = .2;
-	final static double freeLoadRatio = .25;
-	final static double straightRemoveRatio = .1;
+	final static double addRatio = .1;
+	final static double freeLoadRatio = .2;
+	final static double straightRemoveRatio = .0;
 	final static double fullRemoveRatio = .8;
 	final static double semiRemoveRatio = .1;
-	final static int startingNodes = 25;
-	static int nodeCount = 0;
+	final static int startingNodes = 10;
+	final static int initFreeLoaders = 3;
+	final static int fullNodes = 3;
+	
+	static int nodeCount = -1;
 	static List<List<Edge>> edges;
 	static List<ClientNode> nodes;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		//Add a source node
 		nodes = new ArrayList<ClientNode>();
 		edges = new ArrayList<List<Edge>>();
-		nodes.add(new ClientNode(nodeCount, size, 0, true, false));
+		//Source nodes
+		for(int i = 0; i < fullNodes; i++){
+			nodeCount++;
+			nodes.add(new ClientNode(nodeCount, size, 0, true, false));
+		}
 		//Add empty nodes
-		for(int i = 1; i < startingNodes; i++){
+		for(int i = 0; i < startingNodes; i++){
 			nodeCount++;
 			nodes.add(new ClientNode(nodeCount, size, 0, false, false));
 		}
+		//Add good for nothing freeloaders
+		for(int i = 0; i < initFreeLoaders; i++){
+			nodeCount++;
+			nodes.add(new ClientNode(nodeCount, size, 0, false, true));
+		}
+		//Add edges for every single node in the graph, 2XN nodes  This is for different speeds for different node pairs
 		for(int i = 0; i < nodes.size(); i++){
 			edges.add(new ArrayList<Edge>());
 			for(int j = 0; j < nodes.size(); j++){
@@ -42,21 +55,22 @@ public class MainSim {
 		int i = 0;
 		System.out.println("Starting program");
 		while(!done()){
+			//Large swap data method
 			performSwap();
-			/*try {
-				System.in.read();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}*/
+			//Print if a new node 
 			printDone(i);
-			if(i > runTime){
+			//If we are within the run time, still add nodes
+			if(i < runTime){
 				addNodes(i);
 			}
+			//Perform remove algorithm
 			removeNodes();
+			//info for debugging
+			//infoDump(i);
 			i++;
 		}
 	}
+	//check if there are nodes that stil need data
 	private static boolean done(){
 		for(ClientNode temp: nodes){
 			if(!temp.marked()){
@@ -65,24 +79,31 @@ public class MainSim {
 		}
 		return true;
 	}
+	//Swap the data of the nodes
 	private static void performSwap(){
+		//Clear the top4 lists to renew their top4
 		for(ClientNode temp : nodes){
 			temp.clearTop();
 		}
+		//reroll all the edge weights for the non freeloaders
 		updateWeights();
+		//Tell all to swap
 		for(ClientNode temp : nodes){
 			temp.swapData();
 		}
 		if(debug){
 			System.out.print("Done Swapping");
-			infoDump();
+			
 		}
 	}
+	//add nodes to the system
 	private static void addNodes(int time){
+		//Percent chance to happen
 		if(Math.random() < addRatio){
 			ClientNode temp; 
 			nodeCount++;
 			System.out.print("Adding Node: " + nodeCount);
+			//Chance to be a freeloader
 			if(Math.random() < freeLoadRatio){
 				temp = new ClientNode(nodeCount, size, time, false, true);
 				System.out.println("(Freeloader)");
@@ -91,6 +112,7 @@ public class MainSim {
 				System.out.println();
 			}
 			nodes.add(temp);
+			//Add his edges into the system
 			for(List<Edge> tempEdge: edges){
 				tempEdge.add(new Edge(temp));
 			}
@@ -101,7 +123,9 @@ public class MainSim {
 			edges.add(tempList);
 		}
 	}
+	
 	private static void removeNodes(){
+		//chance to happen, nodes that are done have a higher chance of leaving
 		if(Math.random() < straightRemoveRatio){
 			int index = (int)(Math.random() * nodes.size());
 			ClientNode temp = nodes.get(index);
@@ -118,16 +142,21 @@ public class MainSim {
 			}
 		}
 	}
-	private static void infoDump(){
+	//Print everyone's current data amount
+	private static void infoDump(int time){
+		System.out.println("Time: " + time);
 		for(ClientNode temp : nodes){
-			System.out.print("Node: " + temp.getID() + ", Amount Left " + temp.amountLeft()); 
-			if(temp.freeLoader()){
-				System.out.println("(FreeLoader)");
-			}else{
-				System.out.println();
+			if(temp.amountLeft() != 0){
+				System.out.print("Node: " + temp.getID() + ", Amount Left " + temp.amountLeft()); 
+				if(temp.freeLoader()){
+					System.out.println("(FreeLoader)");
+				}else{
+					System.out.println();
+				}
 			}
 		}
 	}
+	//Check if a node is done, if it is print it and mark it
 	private static void printDone(int time){
 		for(ClientNode temp : nodes){
 			if(temp.amountLeft() == 0 && !temp.marked()){
@@ -141,7 +170,7 @@ public class MainSim {
 			}
 		}
 	}
-	
+	//Set the weights for the edges
 	private static void updateWeights(){
 		for(int i = 0; i < nodes.size(); i++){
 			if(nodes.get(i).freeLoader()){
